@@ -134,7 +134,29 @@ def main():
     # print(len(ids))
     # print(tokenizer.decode(ids[:100]))
 
-    dataloader = create_dataloader(raw_text,batch_size=8,max_length=4,stride=4,shuffle=False,)
+    max_length = 4
+    batch_size = 8
+    dataloader = create_dataloader(
+        raw_text,
+        batch_size=batch_size,
+        max_length=max_length,
+        stride=max_length,
+        shuffle=False,
+    )
+
+    vocab_size = 50257
+    output_dim = 256
+    context_length = 1024
+
+    token_embedding_layer = torch.nn.Embedding(vocab_size, output_dim)
+    pos_embedding_layer = torch.nn.Embedding(context_length, output_dim)
+
+    for batch in dataloader:
+        input_ids, target_ids = batch
+        token_embeddings = token_embedding_layer(input_ids)
+        pos_embeddings = pos_embedding_layer(torch.arange(max_length))
+        input_embeddings = token_embeddings + pos_embeddings
+        break
 
 
 if __name__ == "__main__":
