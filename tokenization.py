@@ -9,12 +9,13 @@ def tokenize_using_re(text):
     # result = re.split(r'(\s)', text)
 
     # Splits on whitespace and punctuation. This method includes whitespace and punctuation.
-    result = re.split(r'([{}]|\s)'.format(re.escape(string.punctuation)), text)
+    result = re.split(r"([{}]|\s)".format(re.escape(string.punctuation)), text)
 
     # Removes whitespace from result.
     result = [token.strip() for token in result if token.strip()]
 
     return result
+
 
 class Tokenizer:
     def __init__(self, vocab):
@@ -23,22 +24,27 @@ class Tokenizer:
 
     def encode(self, text):
         tokens = tokenize_using_re(text)
+        tokens = [token if token in self.str_to_int else "<|unk|>" for token in tokens]
         ids = [self.str_to_int[token] for token in tokens]
         return ids
-    
+
     def decode(self, ids):
         text = " ".join([self.int_to_str[i] for i in ids])
 
         # Remove spaces before punctuation. Does not handle punctuation like '(' which needs no space after it not before it.
-        pattern = r'\s+([{}])'.format(re.escape(string.punctuation))
-        text = re.sub(pattern, r'\1', text)
+        # We use < in EOS and UNK tokens, so we need to remove spaces before them.
+        pattern = r"\s+([{}])".format(re.escape(string.punctuation.replace('<', '')))
+        text = re.sub(pattern, r"\1", text)
 
         return text
 
 
 def create_vocab_from_tokens(tokens):
-    all_words = sorted(set(tokens))
-    vocab = {word: i for i, word in enumerate(all_words)}
+    all_tokens = sorted(list(set(tokens)))
+
+    # unk: Unknown, eos: End of Sequence
+    all_tokens.extend(["<|unk|>", "<|eos|>"])
+    vocab = {token: i for i, token in enumerate(all_tokens)}
     return vocab
 
 
@@ -66,12 +72,19 @@ def main():
     # print(list(vocab.keys())[:25])
 
     tokenizer = Tokenizer(vocab)
-    text = """To me this humour seems to possess a
-greater affinity, on the whole, to that of Addison than to any other of
-the numerous species of this great British genus"""
-    ids = tokenizer.encode(text)
-    print(ids)
-    print(tokenizer.decode(ids))
+    #     text = """To me this humour seems to possess a
+    # greater affinity, on the whole, to that of Addison than to any other of
+    # the numerous species of this great British genus"""
+    #     ids = tokenizer.encode(text)
+    #     print(ids)
+    #     print(tokenizer.decode(ids))
+
+    # text1 = "Hello, do you like tea?"
+    # text2 = "In the sunlit terraces of the palace."
+    # text = " <|endoftext|> ".join((text1, text2))
+    # ids = tokenizer.encode(text)
+    # print(ids)
+    # print(tokenizer.decode(ids))
 
 
 if __name__ == "__main__":
